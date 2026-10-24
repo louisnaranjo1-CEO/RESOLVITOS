@@ -1,0 +1,383 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Multi-role unified account profile for Resolvitos users (Client, Driver, Business, Superadmin).",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID of the user." },
+        "email": { "type": "string", "description": "User email address." },
+        "displayName": { "type": "string", "description": "Full display name." },
+        "phone": { "type": "string", "description": "Contact phone number." },
+        "city": { "type": "string", "description": "Active city in Venezuela." },
+        "role": { "type": "string", "description": "Primary role (client, driver, business, admin)." },
+        "activeRole": { "type": "string", "description": "Currently selected role in the UI switcher." },
+        "enabledRoles": { "type": "array", "description": "List of enabled roles for this unified account." },
+        "points": { "type": "integer", "description": "Global loyalty points." },
+        "referralCode": { "type": "string", "description": "Personal referral code." },
+        "biometricLockEnabled": { "type": "boolean", "description": "Whether biometric lock is enabled." },
+        "adminSecurityPin": { "type": "string", "description": "Security PIN for CPanel access." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of update." }
+      },
+      "required": ["userId", "displayName", "role", "activeRole", "points", "createdAt", "updatedAt"]
+    },
+    "SystemSettings": {
+      "title": "SystemSettings",
+      "description": "Global platform configuration including official BCV exchange rate and default vehicle rates.",
+      "type": "object",
+      "properties": {
+        "bcvRate": { "type": "number", "description": "Official BCV exchange rate (Bs per 1 USD)." },
+        "commissionPercent": { "type": "number", "description": "Platform commission percentage." },
+        "motoBaseFareUsd": { "type": "number", "description": "Suggested base fare for Moto Taxi." },
+        "motoPerKmUsd": { "type": "number", "description": "Suggested per-km fare for Moto Taxi." },
+        "taxiBaseFareUsd": { "type": "number", "description": "Suggested base fare for Taxi Economico." },
+        "taxiPerKmUsd": { "type": "number", "description": "Suggested per-km fare for Taxi Economico." },
+        "termsClient": { "type": "string", "description": "Markdown terms for Clients." },
+        "termsDriver": { "type": "string", "description": "Markdown terms for Drivers." },
+        "termsBusiness": { "type": "string", "description": "Markdown terms for Business partners." },
+        "updatedBy": { "type": "string", "description": "UID of user who updated settings." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp." }
+      },
+      "required": ["bcvRate", "commissionPercent", "updatedBy", "updatedAt"]
+    },
+    "Comercio": {
+      "title": "Comercio",
+      "description": "Allied store or restaurant in the Resolvitos Marketplace.",
+      "type": "object",
+      "properties": {
+        "tenantKey": { "type": "string", "description": "Shared operational tenant key resolvitos_live." },
+        "ownerId": { "type": "string", "description": "UID of the business owner." },
+        "name": { "type": "string", "description": "Business name." },
+        "category": { "type": "string", "description": "Marketplace category." },
+        "city": { "type": "string", "description": "City where business operates." },
+        "address": { "type": "string", "description": "Physical address." },
+        "rating": { "type": "number", "description": "Average star rating." },
+        "deliveryFeeUsd": { "type": "number", "description": "Base delivery fee in USD." },
+        "etaMinutes": { "type": "integer", "description": "Estimated preparation and delivery minutes." },
+        "hasCashea": { "type": "boolean", "description": "Accepts Cashea installments." },
+        "hasTwoByThree": { "type": "boolean", "description": "Accepts 2x3 financing." },
+        "isActive": { "type": "boolean", "description": "Whether store is open." },
+        "isApproved": { "type": "boolean", "description": "Verified by Superadmin." },
+        "workingHours": { "type": "string", "description": "Schedule string." },
+        "pagoMovilInfo": { "type": "string", "description": "Bank, phone, and RIF for Pago Movil." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tenantKey", "ownerId", "name", "category", "city", "deliveryFeeUsd", "isActive", "isApproved", "createdAt", "updatedAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Catalog product belonging to a Comercio with USD price converted dynamically to Bs BCV.",
+      "type": "object",
+      "properties": {
+        "tenantKey": { "type": "string", "description": "Shared operational tenant key resolvitos_live." },
+        "comercioId": { "type": "string", "description": "Parent store document ID." },
+        "comercioName": { "type": "string", "description": "Parent store name." },
+        "ownerId": { "type": "string", "description": "UID of store owner." },
+        "name": { "type": "string", "description": "Product title." },
+        "description": { "type": "string", "description": "Ingredients and modifiers." },
+        "priceUsd": { "type": "number", "description": "Price in USD." },
+        "category": { "type": "string", "description": "Product section." },
+        "stock": { "type": "integer", "description": "Available inventory units." },
+        "isAvailable": { "type": "boolean", "description": "Whether product is in stock." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tenantKey", "comercioId", "ownerId", "name", "priceUsd", "stock", "isAvailable", "createdAt", "updatedAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Marketplace order supporting Delivery (Moto Taxi fleet or own), Pickup, and QR Table dining.",
+      "type": "object",
+      "properties": {
+        "tenantKey": { "type": "string", "description": "Shared operational tenant key resolvitos_live." },
+        "clientId": { "type": "string", "description": "UID of ordering customer." },
+        "clientName": { "type": "string", "description": "Customer display name." },
+        "comercioId": { "type": "string", "description": "Target store ID." },
+        "comercioName": { "type": "string", "description": "Target store name." },
+        "itemsSummary": { "type": "string", "description": "Summary of ordered items." },
+        "subtotalUsd": { "type": "number", "description": "Subtotal in USD." },
+        "deliveryFeeUsd": { "type": "number", "description": "Delivery fee in USD." },
+        "totalUsd": { "type": "number", "description": "Total in USD." },
+        "bcvRateApplied": { "type": "number", "description": "BCV rate snapshot at order creation." },
+        "deliveryType": { "type": "string", "description": "delivery, pickup, or mesa." },
+        "deliveryAddress": { "type": "string", "description": "Selected map destination address." },
+        "paymentMethod": { "type": "string", "description": "Pago Movil, Efectivo, Transferencia, Cashea, Cuotas." },
+        "paymentReference": { "type": "string", "description": "Payment reference code." },
+        "paymentStatus": { "type": "string", "description": "pending_verification or verified." },
+        "status": { "type": "string", "description": "pending, accepted, preparing, ready, dispatched, delivered, cancelled." },
+        "stockConfirmed": { "type": "boolean", "description": "Confirmed by store." },
+        "isExternalDelivery": { "type": "boolean", "description": "Uses Resolvitos Moto Taxi fleet." },
+        "transportRequestId": { "type": "string", "description": "Linked Moto Taxi delivery request ID." },
+        "deliveryDriverId": { "type": "string", "description": "Assigned Moto Taxi driver UID." },
+        "driverName": { "type": "string", "description": "Assigned Moto Taxi driver name." },
+        "vehiclePlate": { "type": "string", "description": "Assigned Moto Taxi plate." },
+        "pointsEarned": { "type": "integer", "description": "Points credited to customer for this store." },
+        "rating": { "type": "integer", "description": "1-5 star customer review rating." },
+        "reviewComment": { "type": "string", "description": "Customer review comment." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tenantKey", "clientId", "comercioId", "comercioName", "itemsSummary", "totalUsd", "bcvRateApplied", "deliveryType", "paymentMethod", "status", "createdAt", "updatedAt"]
+    },
+    "DriverProfile": {
+      "title": "DriverProfile",
+      "description": "Moto Taxi (Passenger + Delivery) or Taxi Economico driver profile with custom fare rates.",
+      "type": "object",
+      "properties": {
+        "tenantKey": { "type": "string", "description": "Shared operational tenant key resolvitos_live." },
+        "driverId": { "type": "string", "description": "Driver UID." },
+        "name": { "type": "string", "description": "Driver full name." },
+        "phone": { "type": "string", "description": "Driver phone." },
+        "vehicleType": { "type": "string", "description": "moto (Moto Taxi & Delivery) or taxi_economico (Taxi Economico)." },
+        "vehicleModel": { "type": "string", "description": "Vehicle brand and model." },
+        "vehiclePlate": { "type": "string", "description": "License plate." },
+        "isOnline": { "type": "boolean", "description": "Online status." },
+        "availability": { "type": "string", "description": "disponible, ocupado, fuera_de_linea." },
+        "baseFareUsd": { "type": "number", "description": "Driver custom base fare in USD." },
+        "ratePerKmUsd": { "type": "number", "description": "Driver custom rate per kilometer in USD." },
+        "minimumFareUsd": { "type": "number", "description": "Driver custom minimum ride fare in USD." },
+        "deliveryFlatFeeUsd": { "type": "number", "description": "Moto Taxi delivery fee in USD." },
+        "hasThermalBag": { "type": "boolean", "description": "Whether Moto Taxi has thermal delivery bag." },
+        "rating": { "type": "number", "description": "Driver average star rating." },
+        "latitude": { "type": "number", "description": "Current GPS latitude." },
+        "longitude": { "type": "number", "description": "Current GPS longitude." },
+        "commissionDebtUsd": { "type": "number", "description": "Accumulated platform commission debt in USD." },
+        "pagoMovilInfo": { "type": "string", "description": "Driver Pago Movil payment details." },
+        "status": { "type": "string", "description": "approved, pending, suspended." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tenantKey", "driverId", "name", "vehicleType", "vehicleModel", "vehiclePlate", "isOnline", "baseFareUsd", "ratePerKmUsd", "minimumFareUsd", "createdAt", "updatedAt"]
+    },
+    "TransportRequest": {
+      "title": "TransportRequest",
+      "description": "Ride, Delivery, or Mandado/Encomienda request with interactive map coordinates and driver fare calculation.",
+      "type": "object",
+      "properties": {
+        "tenantKey": { "type": "string", "description": "Shared operational tenant key resolvitos_live." },
+        "clientId": { "type": "string", "description": "Requester UID." },
+        "clientName": { "type": "string", "description": "Requester name." },
+        "serviceCategory": { "type": "string", "description": "transport, delivery, mandado, encomienda." },
+        "vehicleType": { "type": "string", "description": "moto or taxi_economico." },
+        "originAddress": { "type": "string", "description": "Origin label selected on map." },
+        "originLat": { "type": "number", "description": "Origin latitude." },
+        "originLng": { "type": "number", "description": "Origin longitude." },
+        "destinationAddress": { "type": "string", "description": "Destination label selected on map." },
+        "destinationLat": { "type": "number", "description": "Destination latitude." },
+        "destinationLng": { "type": "number", "description": "Destination longitude." },
+        "distanceKm": { "type": "number", "description": "Calculated route distance in kilometers." },
+        "priceUsd": { "type": "number", "description": "Calculated or agreed fare in USD." },
+        "bcvRateApplied": { "type": "number", "description": "BCV exchange rate snapshot." },
+        "status": { "type": "string", "description": "searching, accepted, arrived, in_transit, completed, cancelled." },
+        "assignedDriverId": { "type": "string", "description": "Assigned driver UID." },
+        "assignedDriverName": { "type": "string", "description": "Assigned driver name." },
+        "assignedVehicleInfo": { "type": "string", "description": "Assigned vehicle model and plate." },
+        "packageDescription": { "type": "string", "description": "Package or errand instructions for mandado/encomienda." },
+        "senderInfo": { "type": "string", "description": "Sender name and phone." },
+        "receiverInfo": { "type": "string", "description": "Receiver name and phone." },
+        "fletePagadoPor": { "type": "string", "description": "remitente or destinatario." },
+        "linkedOrderId": { "type": "string", "description": "Optional linked store order ID for fleet delivery." },
+        "paymentReference": { "type": "string", "description": "Payment reference from passenger." },
+        "lostItemReport": { "type": "string", "description": "Lost item description if reported." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tenantKey", "clientId", "serviceCategory", "vehicleType", "originAddress", "destinationAddress", "distanceKm", "priceUsd", "status", "createdAt", "updatedAt"]
+    },
+    "TransportBid": {
+      "title": "TransportBid",
+      "description": "Real-time driver offer or counter-offer on a TransportRequest.",
+      "type": "object",
+      "properties": {
+        "tenantKey": { "type": "string", "description": "Shared operational tenant key resolvitos_live." },
+        "requestId": { "type": "string", "description": "Target transport request ID." },
+        "driverId": { "type": "string", "description": "Offering driver UID." },
+        "driverName": { "type": "string", "description": "Offering driver name." },
+        "vehicleType": { "type": "string", "description": "moto or taxi_economico." },
+        "vehicleModel": { "type": "string", "description": "Vehicle model." },
+        "vehiclePlate": { "type": "string", "description": "Vehicle plate." },
+        "driverRating": { "type": "number", "description": "Driver rating." },
+        "offeredPriceUsd": { "type": "number", "description": "Offered price in USD calculated from driver rates or counter-offer." },
+        "estimatedEtaMinutes": { "type": "integer", "description": "ETA in minutes." },
+        "hasThermalBag": { "type": "boolean", "description": "Thermal bag indicator." },
+        "status": { "type": "string", "description": "pending, accepted, rejected." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tenantKey", "requestId", "driverId", "driverName", "vehicleType", "offeredPriceUsd", "estimatedEtaMinutes", "status", "createdAt", "updatedAt"]
+    },
+    "BusinessMission": {
+      "title": "BusinessMission",
+      "description": "Configurable loyalty mission for a specific business or global platform that unlocks a prize when completed.",
+      "type": "object",
+      "properties": {
+        "tenantKey": { "type": "string", "description": "Shared operational tenant key resolvitos_live." },
+        "comercioId": { "type": "string", "description": "Target store ID or 'global'." },
+        "comercioName": { "type": "string", "description": "Target store name or 'Resolvitos Global'." },
+        "creatorId": { "type": "string", "description": "UID of business owner or superadmin who configured the mission." },
+        "title": { "type": "string", "description": "Mission title." },
+        "description": { "type": "string", "description": "How to complete the mission." },
+        "targetPoints": { "type": "integer", "description": "Points required in that business to unlock the prize." },
+        "targetOrders": { "type": "integer", "description": "Number of orders required in that business to unlock the prize." },
+        "rewardTitle": { "type": "string", "description": "Unlocked prize title (e.g., Hamburguesa Gratis, Delivery Gratis)." },
+        "rewardValueUsd": { "type": "number", "description": "Equivalent USD value of the unlocked reward." },
+        "isActive": { "type": "boolean", "description": "Whether mission is active." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tenantKey", "comercioId", "comercioName", "creatorId", "title", "targetPoints", "targetOrders", "rewardTitle", "rewardValueUsd", "isActive", "createdAt", "updatedAt"]
+    },
+    "UserMissionClaim": {
+      "title": "UserMissionClaim",
+      "description": "Record of a user unlocking and claiming a business mission reward.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Customer UID." },
+        "missionId": { "type": "string", "description": "Completed mission ID." },
+        "comercioId": { "type": "string", "description": "Store ID." },
+        "comercioName": { "type": "string", "description": "Store name." },
+        "rewardTitle": { "type": "string", "description": "Prize title unlocked." },
+        "couponCode": { "type": "string", "description": "Generated redemption code." },
+        "status": { "type": "string", "description": "unlocked, redeemed." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "missionId", "comercioId", "rewardTitle", "couponCode", "status", "createdAt", "updatedAt"]
+    },
+    "UserMissionProgress": {
+      "title": "UserMissionProgress",
+      "description": "Real-time gamified progress of a user toward completing a business mission and earning points/rewards.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Customer UID." },
+        "missionId": { "type": "string", "description": "Target business mission ID." },
+        "comercioId": { "type": "string", "description": "Store ID or 'global'." },
+        "comercioName": { "type": "string", "description": "Store name." },
+        "missionTitle": { "type": "string", "description": "Challenge title." },
+        "currentPoints": { "type": "integer", "description": "Points accumulated toward this mission." },
+        "targetPoints": { "type": "integer", "description": "Points required to complete the mission." },
+        "currentOrders": { "type": "integer", "description": "Orders completed toward this mission." },
+        "targetOrders": { "type": "integer", "description": "Orders required to complete the mission." },
+        "pointsReward": { "type": "integer", "description": "Bonus loyalty points awarded upon completion." },
+        "isCompleted": { "type": "boolean", "description": "Whether the challenge requirements have been met." },
+        "rewardClaimed": { "type": "boolean", "description": "Whether the user has claimed the unlocked prize/coupon." },
+        "couponCode": { "type": "string", "description": "Redemption coupon code once claimed." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "missionId", "comercioId", "comercioName", "missionTitle", "currentPoints", "targetPoints", "currentOrders", "targetOrders", "pointsReward", "isCompleted", "rewardClaimed", "createdAt", "updatedAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Unified multimedia chat and VoIP signaling message for orders and rides.",
+      "type": "object",
+      "properties": {
+        "tenantKey": { "type": "string", "description": "Shared operational tenant key resolvitos_live." },
+        "contextId": { "type": "string", "description": "orderId or requestId." },
+        "senderId": { "type": "string", "description": "Sender UID." },
+        "senderName": { "type": "string", "description": "Sender display name." },
+        "senderRole": { "type": "string", "description": "client, driver, business, admin." },
+        "text": { "type": "string", "description": "Message body." },
+        "mediaType": { "type": "string", "description": "text, image, audio, video, voip_call." },
+        "mediaUrl": { "type": "string", "description": "Optional attachment or call session reference." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tenantKey", "contextId", "senderId", "senderName", "senderRole", "text", "mediaType", "createdAt"]
+    },
+    "RestaurantOperation": {
+      "title": "RestaurantOperation",
+      "description": "Internal restaurant operations: QR tables, waiter assignments, expenses, and cash register closures.",
+      "type": "object",
+      "properties": {
+        "tenantKey": { "type": "string", "description": "Shared operational tenant key resolvitos_live." },
+        "comercioId": { "type": "string", "description": "Store ID." },
+        "ownerId": { "type": "string", "description": "Store owner UID." },
+        "recordType": { "type": "string", "description": "table_qr, waiter, expense, cash_register." },
+        "title": { "type": "string", "description": "Table number, waiter name, expense concept, or shift title." },
+        "details": { "type": "string", "description": "QR code payload, waiter role, or closure notes." },
+        "amountUsd": { "type": "number", "description": "Current bill, expense amount, or register total in USD." },
+        "status": { "type": "string", "description": "libre, ocupada, pagando, cerrado, registrado." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tenantKey", "comercioId", "ownerId", "recordType", "title", "amountUsd", "status", "createdAt", "updatedAt"]
+    },
+    "EmergencyService": {
+      "title": "EmergencyService",
+      "description": "24/7 Emergency directory entry (Ambulance, Fire, Police, Road Assistance).",
+      "type": "object",
+      "properties": {
+        "tenantKey": { "type": "string", "description": "Shared operational tenant key resolvitos_live." },
+        "name": { "type": "string", "description": "Institution or service name." },
+        "category": { "type": "string", "description": "Salud, Bomberos, Seguridad, Vial." },
+        "scope": { "type": "string", "description": "Nacional or Local city name." },
+        "phone": { "type": "string", "description": "Direct emergency phone number." },
+        "whatsapp": { "type": "string", "description": "WhatsApp contact number." },
+        "isAvailable24h": { "type": "boolean", "description": "24/7 availability." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tenantKey", "name", "category", "scope", "phone", "isAvailable24h", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/profiles/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Unified multi-role user accounts."
+    },
+    "/system_settings/{settingId}": {
+      "schema": { "$ref": "#/entities/SystemSettings" },
+      "description": "BCV official rate, default fares, and legal Markdown documents."
+    },
+    "/comercios/{comercioId}": {
+      "schema": { "$ref": "#/entities/Comercio" },
+      "description": "Marketplace stores and restaurants."
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Store products with USD/Bs dual pricing."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer orders and Moto Taxi fleet dispatch."
+    },
+    "/drivers/{driverId}": {
+      "schema": { "$ref": "#/entities/DriverProfile" },
+      "description": "Moto Taxi and Taxi Economico drivers with custom per-km and base rates."
+    },
+    "/transport_requests/{requestId}": {
+      "schema": { "$ref": "#/entities/TransportRequest" },
+      "description": "Interactive map rides, deliveries, and mandados."
+    },
+    "/transport_bids/{bidId}": {
+      "schema": { "$ref": "#/entities/TransportBid" },
+      "description": "Real-time driver bids and fare offers."
+    },
+    "/business_missions/{missionId}": {
+      "schema": { "$ref": "#/entities/BusinessMission" },
+      "description": "Per-business and global loyalty missions and unlockable prizes."
+    },
+    "/user_mission_claims/{claimId}": {
+      "schema": { "$ref": "#/entities/UserMissionClaim" },
+      "description": "Unlocked and claimed mission rewards per user."
+    },
+    "/user_mission_progress/{progressId}": {
+      "schema": { "$ref": "#/entities/UserMissionProgress" },
+      "description": "Per-user gamified mission progress tracking points, orders, and completion state."
+    },
+    "/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Real-time multimedia chat and VoIP call signaling."
+    },
+    "/restaurant_ops/{opId}": {
+      "schema": { "$ref": "#/entities/RestaurantOperation" },
+      "description": "QR tables, waiters, expenses, and cash register closures."
+    },
+    "/emergency_services/{serviceId}": {
+      "schema": { "$ref": "#/entities/EmergencyService" },
+      "description": "24/7 Emergency services directory."
+    }
+  }
+}

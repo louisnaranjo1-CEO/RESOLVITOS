@@ -1,0 +1,6 @@
+{
+  "name": "Resolvitos",
+  "description": "Súper aplicación bimonetaria (USD/Bs BCV) de Marketplace, Delivery en Moto Taxi, Taxi Económico con Mapa, Misiones con Premios y Emergencias 24/7.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

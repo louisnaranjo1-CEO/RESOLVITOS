@@ -1,0 +1,341 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 120 &&
+             data.role is string && data.role.size() <= 32 &&
+             data.activeRole is string && data.activeRole.size() <= 32 &&
+             data.points is int && data.points >= 0 &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 200)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 40)) &&
+             (!('city' in data) || (data.city is string && data.city.size() <= 80)) &&
+             (!('enabledRoles' in data) || (data.enabledRoles is list && data.enabledRoles.size() <= 10)) &&
+             (!('referralCode' in data) || (data.referralCode is string && data.referralCode.size() <= 40)) &&
+             (!('biometricLockEnabled' in data) || data.biometricLockEnabled is bool) &&
+             (!('adminSecurityPin' in data) || (data.adminSecurityPin is string && data.adminSecurityPin.size() <= 16));
+    }
+
+    function isValidSystemSettings(data) {
+      return (data.bcvRate is number) && data.bcvRate > 0 &&
+             (data.commissionPercent is number) && data.commissionPercent >= 0 && data.commissionPercent <= 100 &&
+             data.updatedBy is string && data.updatedBy.size() <= 128 &&
+             (!('motoBaseFareUsd' in data) || data.motoBaseFareUsd is number) &&
+             (!('motoPerKmUsd' in data) || data.motoPerKmUsd is number) &&
+             (!('taxiBaseFareUsd' in data) || data.taxiBaseFareUsd is number) &&
+             (!('taxiPerKmUsd' in data) || data.taxiPerKmUsd is number) &&
+             (!('termsClient' in data) || (data.termsClient is string && data.termsClient.size() <= 15000)) &&
+             (!('termsDriver' in data) || (data.termsDriver is string && data.termsDriver.size() <= 15000)) &&
+             (!('termsBusiness' in data) || (data.termsBusiness is string && data.termsBusiness.size() <= 15000)) &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidComercio(data) {
+      return data.tenantKey == 'resolvitos_live' &&
+             data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+             data.category is string && data.category.size() <= 60 &&
+             data.city is string && data.city.size() <= 80 &&
+             (data.deliveryFeeUsd is number) && data.deliveryFeeUsd >= 0 &&
+             data.isActive is bool &&
+             data.isApproved is bool &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidProduct(data) {
+      return data.tenantKey == 'resolvitos_live' &&
+             data.comercioId is string && data.comercioId.size() <= 128 &&
+             data.ownerId is string && data.ownerId.size() <= 128 &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+             (data.priceUsd is number) && data.priceUsd >= 0 &&
+             data.stock is int && data.stock >= 0 &&
+             data.isAvailable is bool &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidOrder(data) {
+      return data.tenantKey == 'resolvitos_live' &&
+             data.clientId is string && data.clientId.size() >= 1 && data.clientId.size() <= 128 &&
+             data.comercioId is string && data.comercioId.size() <= 128 &&
+             data.comercioName is string && data.comercioName.size() <= 120 &&
+             data.itemsSummary is string && data.itemsSummary.size() <= 2000 &&
+             (data.totalUsd is number) && data.totalUsd >= 0 &&
+             (data.bcvRateApplied is number) && data.bcvRateApplied > 0 &&
+             data.deliveryType is string && data.deliveryType.size() <= 40 &&
+             data.paymentMethod is string && data.paymentMethod.size() <= 60 &&
+             data.status is string && data.status.size() <= 40 &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidDriverProfile(data) {
+      return data.tenantKey == 'resolvitos_live' &&
+             data.driverId is string && data.driverId.size() >= 1 && data.driverId.size() <= 128 &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+             (data.vehicleType == 'moto' || data.vehicleType == 'taxi_economico') &&
+             data.vehicleModel is string && data.vehicleModel.size() <= 120 &&
+             data.vehiclePlate is string && data.vehiclePlate.size() <= 32 &&
+             data.isOnline is bool &&
+             (data.baseFareUsd is number) && data.baseFareUsd >= 0 &&
+             (data.ratePerKmUsd is number) && data.ratePerKmUsd >= 0 &&
+             (data.minimumFareUsd is number) && data.minimumFareUsd >= 0 &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidTransportRequest(data) {
+      return data.tenantKey == 'resolvitos_live' &&
+             data.clientId is string && data.clientId.size() >= 1 && data.clientId.size() <= 128 &&
+             data.serviceCategory is string && data.serviceCategory.size() <= 40 &&
+             (data.vehicleType == 'moto' || data.vehicleType == 'taxi_economico') &&
+             data.originAddress is string && data.originAddress.size() <= 300 &&
+             data.destinationAddress is string && data.destinationAddress.size() <= 300 &&
+             (data.distanceKm is number) && data.distanceKm >= 0 &&
+             (data.priceUsd is number) && data.priceUsd >= 0 &&
+             data.status is string && data.status.size() <= 40 &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidTransportBid(data) {
+      return data.tenantKey == 'resolvitos_live' &&
+             data.requestId is string && data.requestId.size() <= 128 &&
+             data.driverId is string && data.driverId.size() <= 128 &&
+             data.driverName is string && data.driverName.size() <= 120 &&
+             (data.vehicleType == 'moto' || data.vehicleType == 'taxi_economico') &&
+             (data.offeredPriceUsd is number) && data.offeredPriceUsd > 0 &&
+             data.estimatedEtaMinutes is int && data.estimatedEtaMinutes >= 1 &&
+             data.status is string && data.status.size() <= 40 &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidBusinessMission(data) {
+      return data.tenantKey == 'resolvitos_live' &&
+             data.comercioId is string && data.comercioId.size() <= 128 &&
+             data.comercioName is string && data.comercioName.size() <= 120 &&
+             data.creatorId is string && data.creatorId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+             data.targetPoints is int && data.targetPoints >= 0 &&
+             data.targetOrders is int && data.targetOrders >= 0 &&
+             data.rewardTitle is string && data.rewardTitle.size() >= 1 && data.rewardTitle.size() <= 160 &&
+             (data.rewardValueUsd is number) && data.rewardValueUsd >= 0 &&
+             data.isActive is bool &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidUserMissionClaim(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.missionId is string && data.missionId.size() <= 128 &&
+             data.comercioId is string && data.comercioId.size() <= 128 &&
+             data.rewardTitle is string && data.rewardTitle.size() <= 160 &&
+             data.couponCode is string && data.couponCode.size() <= 60 &&
+             data.status is string && data.status.size() <= 40 &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidUserMissionProgress(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.missionId is string && data.missionId.size() >= 1 && data.missionId.size() <= 128 &&
+             data.comercioId is string && data.comercioId.size() <= 128 &&
+             data.comercioName is string && data.comercioName.size() <= 120 &&
+             data.missionTitle is string && data.missionTitle.size() <= 160 &&
+             data.currentPoints is int && data.currentPoints >= 0 &&
+             data.targetPoints is int && data.targetPoints >= 0 &&
+             data.currentOrders is int && data.currentOrders >= 0 &&
+             data.targetOrders is int && data.targetOrders >= 0 &&
+             data.pointsReward is int && data.pointsReward >= 0 &&
+             data.isCompleted is bool &&
+             data.rewardClaimed is bool &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidChatMessage(data) {
+      return data.tenantKey == 'resolvitos_live' &&
+             data.contextId is string && data.contextId.size() <= 128 &&
+             data.senderId is string && data.senderId.size() <= 128 &&
+             data.senderName is string && data.senderName.size() <= 120 &&
+             data.senderRole is string && data.senderRole.size() <= 40 &&
+             data.text is string && data.text.size() <= 2000 &&
+             data.mediaType is string && data.mediaType.size() <= 40 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidRestaurantOperation(data) {
+      return data.tenantKey == 'resolvitos_live' &&
+             data.comercioId is string && data.comercioId.size() <= 128 &&
+             data.ownerId is string && data.ownerId.size() <= 128 &&
+             data.recordType is string && data.recordType.size() <= 40 &&
+             data.title is string && data.title.size() <= 160 &&
+             (data.amountUsd is number) && data.amountUsd >= 0 &&
+             data.status is string && data.status.size() <= 40 &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidEmergencyService(data) {
+      return data.tenantKey == 'resolvitos_live' &&
+             data.name is string && data.name.size() <= 120 &&
+             data.category is string && data.category.size() <= 60 &&
+             data.scope is string && data.scope.size() <= 80 &&
+             data.phone is string && data.phone.size() <= 40 &&
+             data.isAvailable24h is bool &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /profiles/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(userId) && request.auth.uid == userId &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                       incoming().updatedAt is timestamp && incoming().updatedAt <= request.time;
+      allow update: if isSignedIn() && isValidId(userId) && request.auth.uid == userId &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt is timestamp && incoming().updatedAt <= request.time;
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+    }
+
+    match /system_settings/{settingId} {
+      allow get: if isSignedIn() && isValidId(settingId);
+      allow create, update: if isSignedIn() && isValidId(settingId) && isValidSystemSettings(incoming());
+    }
+
+    match /comercios/{comercioId} {
+      allow get: if isSignedIn() && isValidId(comercioId);
+      allow list: if isSignedIn() && existing().tenantKey == 'resolvitos_live';
+      allow create: if isSignedIn() && isValidId(comercioId) && isValidComercio(incoming()) &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+      allow update: if isSignedIn() && isValidId(comercioId) && isValidComercio(incoming()) &&
+                       incoming().createdAt == existing().createdAt;
+    }
+
+    match /products/{productId} {
+      allow get: if isSignedIn() && isValidId(productId);
+      allow list: if isSignedIn() && existing().tenantKey == 'resolvitos_live';
+      allow create: if isSignedIn() && isValidId(productId) && isValidProduct(incoming()) &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+      allow update: if isSignedIn() && isValidId(productId) && isValidProduct(incoming()) &&
+                       incoming().createdAt == existing().createdAt;
+      allow delete: if isSignedIn() && isValidId(productId) && existing().ownerId == request.auth.uid;
+    }
+
+    match /orders/{orderId} {
+      allow get: if isSignedIn() && isValidId(orderId) && (existing().clientId == request.auth.uid || existing().tenantKey == 'resolvitos_live');
+      allow list: if isSignedIn() && (existing().clientId == request.auth.uid || existing().tenantKey == 'resolvitos_live');
+      allow create: if isSignedIn() && isValidId(orderId) && isValidOrder(incoming()) &&
+                       incoming().clientId == request.auth.uid &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+      allow update: if isSignedIn() && isValidId(orderId) && isValidOrder(incoming()) &&
+                       incoming().clientId == existing().clientId &&
+                       incoming().createdAt == existing().createdAt;
+    }
+
+    match /drivers/{driverId} {
+      allow get: if isSignedIn() && isValidId(driverId);
+      allow list: if isSignedIn() && existing().tenantKey == 'resolvitos_live';
+      allow create: if isSignedIn() && isValidId(driverId) && isValidDriverProfile(incoming()) &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+      allow update: if isSignedIn() && isValidId(driverId) && isValidDriverProfile(incoming()) &&
+                       incoming().createdAt == existing().createdAt;
+    }
+
+    match /transport_requests/{requestId} {
+      allow get: if isSignedIn() && isValidId(requestId) && (existing().clientId == request.auth.uid || existing().tenantKey == 'resolvitos_live');
+      allow list: if isSignedIn() && (existing().clientId == request.auth.uid || existing().tenantKey == 'resolvitos_live');
+      allow create: if isSignedIn() && isValidId(requestId) && isValidTransportRequest(incoming()) &&
+                       incoming().clientId == request.auth.uid &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+      allow update: if isSignedIn() && isValidId(requestId) && isValidTransportRequest(incoming()) &&
+                       incoming().clientId == existing().clientId &&
+                       incoming().createdAt == existing().createdAt;
+    }
+
+    match /transport_bids/{bidId} {
+      allow get: if isSignedIn() && isValidId(bidId);
+      allow list: if isSignedIn() && existing().tenantKey == 'resolvitos_live';
+      allow create: if isSignedIn() && isValidId(bidId) && isValidTransportBid(incoming()) &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+      allow update: if isSignedIn() && isValidId(bidId) && isValidTransportBid(incoming()) &&
+                       incoming().createdAt == existing().createdAt;
+    }
+
+    match /business_missions/{missionId} {
+      allow get: if isSignedIn() && isValidId(missionId);
+      allow list: if isSignedIn() && existing().tenantKey == 'resolvitos_live';
+      allow create: if isSignedIn() && isValidId(missionId) && isValidBusinessMission(incoming()) &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+      allow update: if isSignedIn() && isValidId(missionId) && isValidBusinessMission(incoming()) &&
+                       incoming().createdAt == existing().createdAt;
+      allow delete: if isSignedIn() && isValidId(missionId);
+    }
+
+    match /user_mission_claims/{claimId} {
+      allow get: if isSignedIn() && isValidId(claimId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(claimId) && isValidUserMissionClaim(incoming()) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+      allow update: if isSignedIn() && isValidId(claimId) && isValidUserMissionClaim(incoming()) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt;
+    }
+
+    match /user_mission_progress/{progressId} {
+      allow get: if isSignedIn() && isValidId(progressId) &&
+                    ((resource != null && existing().userId == request.auth.uid) ||
+                     (resource == null && progressId.matches('^ump_' + request.auth.uid + '_[a-zA-Z0-9_\\-]+$')));
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(progressId) && isValidUserMissionProgress(incoming()) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+      allow update: if isSignedIn() && isValidId(progressId) && isValidUserMissionProgress(incoming()) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt;
+    }
+
+    match /messages/{messageId} {
+      allow get: if isSignedIn() && isValidId(messageId);
+      allow list: if isSignedIn() && existing().tenantKey == 'resolvitos_live';
+      allow create: if isSignedIn() && isValidId(messageId) && isValidChatMessage(incoming()) &&
+                       incoming().senderId == request.auth.uid &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+    }
+
+    match /restaurant_ops/{opId} {
+      allow get: if isSignedIn() && isValidId(opId);
+      allow list: if isSignedIn() && existing().tenantKey == 'resolvitos_live';
+      allow create: if isSignedIn() && isValidId(opId) && isValidRestaurantOperation(incoming()) &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time;
+      allow update: if isSignedIn() && isValidId(opId) && isValidRestaurantOperation(incoming()) &&
+                       incoming().createdAt == existing().createdAt;
+    }
+
+    match /emergency_services/{serviceId} {
+      allow get: if isSignedIn() && isValidId(serviceId);
+      allow list: if isSignedIn() && existing().tenantKey == 'resolvitos_live';
+      allow create, update: if isSignedIn() && isValidId(serviceId) && isValidEmergencyService(incoming());
+    }
+  }
+}

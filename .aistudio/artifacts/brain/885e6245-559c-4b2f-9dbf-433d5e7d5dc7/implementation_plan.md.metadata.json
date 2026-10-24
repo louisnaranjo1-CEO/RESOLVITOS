@@ -1,0 +1,6 @@
+{
+  "summary":  "Plan de implementación actualizado: selección interactiva de destino en el mapa con cálculo automático de tarifa según distancia y tarifas configuradas por cada conductor, unificación de categorías de vehículos únicamente en Moto Taxi (también para Delivery) y Taxi Económico, y cambio de toda la familia tipográfica a Poppins.",
+  "updatedAt":  "2026-10-23T22:37:31.012317372Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}
